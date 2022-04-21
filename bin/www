@@ -88,7 +88,11 @@ function onListening() {
 
 function connectDb () {
   let options = {
-   // server: { socketOptions: { keepAlive: 1 } }
+    useNewUrlParser: true,
+      useUnifiedTopology: true,
+     // useCreateIndex: true,
+     //useFindAndModify: false,
+    // debug:false,
   };
   mongoose.connect('mongodb+srv://onyix:onyinye7593@my-db.3q0vq.mongodb.net/week-7?retryWrites=true&w=majority', options)
   .then(() => {
