@@ -1,0 +1,188 @@
+1. 
+[
+  {
+    '$match': {
+      'name': {
+        '$regex': 'reg', 
+        '$options': 'i'
+      }
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'name': 1, 
+      'borough': 1, 
+      'cuisine': 1
+    }
+  }
+]
+2. 
+[
+  {
+    '$match': {
+      'borough': 'Bronx'
+    }
+  }, {
+    '$match': {
+      '$or': [
+        {
+          'cuisine': {
+            '$eq': 'American'
+          }
+        }, {
+          'cuisine': {
+            '$eq': 'Chinese'
+          }
+        }
+      ]
+    }
+  }
+]
+3.
+[
+  {
+    '$match': {
+      '$or': [
+        {
+          'borough': {
+            '$eq': 'Staten Island'
+          }
+        }, {
+          'borough': {
+            '$eq': 'Queens'
+          }
+        }, {
+          'borough': {
+            '$eq': 'Bronx'
+          }
+        }, {
+          'borough': {
+            '$eq': 'Brooklyn'
+          }
+        }
+      ]
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'name': 1, 
+      'borough': 1, 
+      'cuisine': 1
+    }
+  }
+]
+
+4.
+[
+  {
+    '$match': {
+      '$and': [
+        {
+          'borough': {
+            '$ne': 'Staten Island'
+          }
+        }, {
+          'borough': {
+            '$ne': 'Queens'
+          }
+        }, {
+          'borough': {
+            '$ne': 'Bronx'
+          }
+        }, {
+          'borough': {
+            '$ne': 'Brooklyn'
+          }
+        }
+      ]
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'name': 1, 
+      'borough': 1, 
+      'cuisine': 1
+    }
+  }
+]
+5.
+[
+  {
+    '$match': {
+      '$and': [
+        {
+          'grades.score': {
+            '$lte': 10, 
+            '$not': {
+              '$gt': 10
+            }
+          }
+        }
+      ]
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'name': 1, 
+      'cuisine': 1, 
+      'borough': 1
+    }
+  }
+]
+6.
+[
+  {
+    '$match': {
+      '$and': [
+        {
+          'cuisine': {
+            '$ne': 'American '
+          }
+        }, {
+          'cuisine': {
+            '$ne': 'Chinese'
+          }
+        }
+      ]
+    }
+  }, {
+    '$match': {
+      'name': {
+        '$regex': '^Wil'
+      }
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'name': 1, 
+      'borough': 1, 
+      'cuisine': 1
+    }
+  }
+]
+
+9b.
+[
+  {
+    '$sort': {
+      'name': 1
+    }
+  }
+]
+10.
+[
+  {
+    '$sort': {
+      'name': -1
+    }
+  }
+]
+11.
+[
+  {
+    '$sort': {
+      'cuisine': 1, 
+      'borough': -1
+    }
+  }
+]
