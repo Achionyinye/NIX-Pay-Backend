@@ -1,38 +1,63 @@
 import fetchData from '../model/helpers';
-const fetchBalances = ()=>{
-    return fetchData.balances;
+import BalanceModel from '../model/balanceModel';
+import TransactionModel from '../model/transactionModel';
+const fetchBalances = async ()=>{
+    // const pipeline = [ 
+    //     {
+    //         $match: {}
+    //     },
+    //     {
+    //       $facet: {
+    //         metadata: [ { $count: 'total' } ],
+    //         data: [ { $skip: 5 }, { $limit: 5 } ]
+    //     }
+    //     },
+    //     {
+    //       $project: { 
+    //         data: 1,
+    //         // Get total from the first element of the metadata array 
+    //         total: { $arrayElemAt: [ '$metadata.total', 0 ] }
+    //     }
+    // }
+    //   ]
+    //const balances = await BalanceModel.aggregate(pipeline);
+    const balances = await BalanceModel.find({});
+    return balances;
 }
-const fetchBalance = (account: number)=>{
+ const fetchBalance = async (account: number)=>{
     const accountNumber: number = +(account);
 
-    const data: DataBase = fetchData;
-    const existingAccounts = data?.balances;
-
-    const targetAccount = existingAccounts?.find(individualAccount=> individualAccount.account === accountNumber);
+    const targetAccount = await BalanceModel.findOne({account: +accountNumber});
     if(!targetAccount){
         return null;
     }
     return targetAccount;
 }
 
-const fetchBankStatement = (account: number)=>{
+const fetchBankStatement = async (account: number)=>{
     const accountNumber: number = +(account);
-    const data: DataBase = fetchData;
-    const accountExists = data?.balances?.find(balance=> balance?.account === accountNumber);
+   // const data: DataBase = fetchData;
+    const accountExists = await BalanceModel.findOne({account: accountNumber});
 
     if(!accountExists){
         return [{wrongAccount: true}];
     }
 
-    const targetAccount = data?.transactions?.find(transaction=> transaction.senderAccount === accountNumber || transaction.receiverAccount === accountNumber);
+    const targetAccount = await TransactionModel.findOne({$or: [{from: accountNumber}, {to: accountNumber}]});
     if(!targetAccount){
         return [{transactionNotFound: true}];
     }
-    const transferHistory = data?.transactions?.filter(transaction=> transaction?.receiverAccount === accountNumber || transaction?.senderAccount === accountNumber)
+    const transferHistory = await TransactionModel.find({$or: [{from: accountNumber}, {to: accountNumber}]});
     return transferHistory;
 }
+const fetchTransactions = async ()=>{
+    const data = await TransactionModel.find({});
+    return data;
+}
+
 export default {
     fetchBalances,
     fetchBalance,
-    fetchBankStatement
+    fetchBankStatement,
+    fetchTransactions
 }
