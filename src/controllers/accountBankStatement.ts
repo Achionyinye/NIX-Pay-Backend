@@ -1,22 +1,26 @@
-import express from 'express';
-import fetchServices from '../services/fetchServices';
+import express from "express";
+import UserModel from "../model/userModel";
+import fetchServices from "../services/fetchServices";
 
-const getBankAccountStatementController =
- async (req: express.Request, res: express.Response, _next: express.NextFunction) =>{
-    // check for validation error(s)
-    const accountNumber: number = +(req?.params?.accountNumber);
-    const result = await fetchServices.fetchBankStatement(accountNumber);
+interface IAccountDetails {
+  accountNumber: number;
+  balance: number;
+  _id: string;
+}
 
-    const key = Object.keys(result[0])[0];
-    switch (key) {
-      case 'wrongAccount':
-        res.json({ message: "Account number does not exist" });
-        break;
-      case 'transactionNotFound':
-        res.json({ message: "No transaction found" });
-        break;
-      default:
-        res.json({ transactions: result });
-    }
-  }
-  export default getBankAccountStatementController;
+const getBankAccountStatementController = async (
+  req: express.Request,
+  res: express.Response,
+  _next: express.NextFunction
+) => {
+  
+  let { accountNumber } = req.params;
+
+  const result = await fetchServices.fetchBankStatement({
+    accountNumber: Number(accountNumber),
+  });
+
+  res.status(200).json({transactions: result});
+
+};
+export default getBankAccountStatementController;

@@ -1,11 +1,14 @@
-
 import express from 'express';
 import transferFunds from '../services/transferFunds';
+import {TransferInfo} from '../typings';
+
 
 const transferController =
 async (req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    let transferInfo: TransferInfo = req.body;
-    const result = await transferFunds(transferInfo);
+  console.log(req.user);
+  let transferInfo: TransferInfo = req.body;
+    let userid = req.user._id as string;
+    const result = await transferFunds(transferInfo, userid);
     
     const key = Object.keys(result)[0];
     switch (key) {

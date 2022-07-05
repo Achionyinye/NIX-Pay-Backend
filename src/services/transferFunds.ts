@@ -1,44 +1,99 @@
-import BalanceModel from '../model/balanceModel';
-import TransactionModel from '../model/transactionModel';
- const transferFunds = async (transferData: TransferInfo)=>{
-    let transferInfo: TransferInfo = transferData;
-//     const data: DataBase = fetchData;
-//     let existingAccounts: Balances =   data?.balances;
-       const fromAccountExists = await BalanceModel.findOne({account: transferInfo.from});
-       const toAccountExists = await BalanceModel.findOne({account: transferInfo.to});
+import TransactionModel from "../model/transactionModel";
+import UserModel from "../model/userModel";
+import { TransferInfo } from "../typings";
 
-    if(!fromAccountExists){
-      return {missingSenderMessage:"Sender account number does not exist"};
+const transferFunds = async (transferInfo: TransferInfo, userid: string) => {
+  let fromAccountExists = await UserModel.findById({
+    _id: userid,
+  });
+  let toAccountExists = await UserModel.findOne({
+    email: transferInfo.email,
+  });
+  console.log(toAccountExists);
+  if (!fromAccountExists) {
+    return { missingSenderMessage: "Sender account number does not exist" };
+  }
+  if (!toAccountExists) {
+    return { missingReceiverMessage: "Receiver account number does not exist" };
+  }
+
+  const accountFrom = fromAccountExists.accountDetails.find(
+    (account: any) => account.accountNumber === transferInfo.from
+  );
+  const accountFromId = fromAccountExists.accountDetails.findIndex(
+    (account: any) => account.accountNumber === transferInfo.from
+  );
+  const accountTo = toAccountExists.accountDetails.find(
+    (account: any) => account.accountNumber === transferInfo.to
+  );
+  const accountToId = toAccountExists.accountDetails.findIndex(
+    (account: any) => account.accountNumber === transferInfo.to
+  );
+
+  const amountValid: boolean =
+    transferInfo?.amount >= 0 && transferInfo?.amount <= accountFrom?.balance;
+  if (!amountValid) {
+    return { insufficientMessage: "Insufficient funds" };
+  }
+  // transfer logic
+  // const fromAccountBalance = accountFrom?.balance - transferInfo?.amount;
+  // const toAccountBalance = accountTo?.balance + transferInfo?.amount;
+  accountFrom.balance -= transferInfo.amount;
+  accountTo.balance += transferInfo.amount;
+
+  fromAccountExists = fromAccountExists.accountDetails.splice(
+    accountFromId,
+    1,
+    accountFrom
+  );
+
+  toAccountExists = toAccountExists.accountDetails.splice(
+    accountToId,
+    1,
+    accountTo
+  );
+
+  // update sender's account'
+  const sender = await UserModel.findByIdAndUpdate(
+    { _id: userid },
+    {
+      $set: { accountDetails: fromAccountExists },
+    },
+    {
+      upsert: true,
+      runValidators: true,
     }
-    if(!toAccountExists){
-      return {missingReceiverMessage:"Receiver account number does not exist"};
+  );
+
+  // update receiver's account'
+  const receiver = await UserModel.findOneAndUpdate(
+    { email: transferInfo.email },
+    {
+      $set: { accountDetails: toAccountExists },
+    },
+    {
+      upsert: true,
+      runValidators: true,
     }
+  );
 
-    const amountValid: boolean = transferInfo?.amount >= 0 && transferInfo?.amount <= fromAccountExists?.balance;
-    if(!amountValid){
-      return {insufficientMessage:"Insufficient funds"};
-    }
-    // transfer logic
-    const fromAccountBalance = fromAccountExists?.balance - transferInfo?.amount;
-    const toAccountBalance = toAccountExists?.balance + transferInfo?.amount;
+  const transactionData = {
+    beneficiaryBank: transferInfo?.beneficiaryBank || "",
+    beneficiaryName: transferInfo?.beneficiaryName || "",
+    from: transferInfo?.from,
+    amount: transferInfo?.amount,
+    to: transferInfo?.to,
+    transferDescription: transferInfo?.transferDescription || "",
+    balance: accountFrom.balance,
+    reference: userid,
+  };
 
-    // update sender's account'
-    await BalanceModel.findByIdAndUpdate(fromAccountExists?._id, {balance: fromAccountBalance});
-    
-        // update receiver's account'
-    await BalanceModel.findByIdAndUpdate(toAccountExists?._id, {balance: toAccountBalance});
-    
-    const transactionData = { 
-      "from": transferInfo?.from,
-      "amount": transferInfo?.amount,
-      "to": transferInfo?.to,
-     "transferDescription": transferInfo?.transferDescription || ""
-    }
+  //  create transaction
+  const transaction = new TransactionModel(transactionData);
+  await sender.save();
+  await receiver.save();
+  const savedTransaction = await transaction.save();
 
-    //  create transaction
-    const transaction = new TransactionModel(transactionData);
-    const savedTransaction = await transaction.save();
-
-    return savedTransaction;
- }
+  return savedTransaction;
+};
 export default transferFunds;

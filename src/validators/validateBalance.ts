@@ -8,7 +8,7 @@ const accountNumberValidator = (
 ) => {
   const { accountNumber } = req.params;
   const schema = joi.object().keys({
-    accountNumber: joi.string().length(9).required(),
+    accountNumber: joi.string().length(10).required(),
   });
   const { value, error } = schema.validate({ accountNumber });
   if (error) {

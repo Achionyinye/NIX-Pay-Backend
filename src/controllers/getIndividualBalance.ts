@@ -3,14 +3,16 @@ import fetchServices from '../services/fetchServices';
 
 const getIndividualBalanceController =
 async (req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    const accountNumber: number = +(req?.params?.accountNumber);
-    const result = await fetchServices.fetchBalance(accountNumber);
-    switch (Boolean(result)) {
-      case true:
-        res.json({ balance: result });
-        break;
-      default:
-        res.json({ message: "Invalid account number" });
-    }
+    //const userID: string = req?.user;
+    console.log("request.user", req.user);
+    
+    // const result = await fetchServices.fetchBalance(userID);
+    // switch (Boolean(result)) {
+    //   case true:
+    //     res.status(200).json({ balance: result });
+    //     break;
+    //   default:
+    //     res.status(400).json({ message: "Invalid account number" });
+    // }
   }
   export default getIndividualBalanceController;
